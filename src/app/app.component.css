@@ -184,6 +184,11 @@ span{
   font-weight: bold;
 }
 
+input.ng-invalid.ng-touched {
+  border: red 2px solid;
+}
+
+/* 
 input.ng-invalid.ng-touched{
   border: red 2px solid;
 }
@@ -200,4 +205,4 @@ input.ng-pending{
 }
 .container.PENDING{
   border: orange 3px solid;
-}
+} */
