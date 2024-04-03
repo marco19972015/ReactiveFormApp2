@@ -77,9 +77,6 @@ export class AppComponent implements OnInit{
 
   // To achieve this we use the disabled attribute and use property binding
   // We again use the reactiveForm since that's where our FormGroup lives
-  
-
-
-
+    // Ex -  <input type="submit" value="Submit" class="submit-btn" [disabled]="reactiveForm.invalid"> 
   
 }
