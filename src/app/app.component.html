@@ -79,18 +79,29 @@
       </div>
     </div>
 
+    <div class="input-box" formArrayName="skills">
+      <input type="text" 
+      placeholder="Add Skill"
+      *ngFor="let control of reactiveForm.get('skills')['controls']; let i = index"
+      [formControlName]="i">
+
+    </div>
+
+    <input type="submit" value="Submit" class="submit-btn" [disabled]="reactiveForm.invalid">
+  </form>
+</section>
     <!--HTML for Skills Form Array -->
-    <div class="input-box skills">
+    <!-- <div class="input-box skills">
       <h4>Add Skills</h4>
       <div class="column">
         <input type="text" placeholder="Add Skill...">
         <button type="button" class="btn-add-delete">Delete</button>
       </div> 
     </div>
-    <button type="button" class="btn-add-delete">Add Skills</button>
+    <button type="button" class="btn-add-delete">Add Skills</button> -->
 
     <!--HTML for Experience Form Array -->
-    <div class="input-box">
+    <!-- <div class="input-box">
       <div class="experience">
         <label>Experience</label>
         <input type="text" placeholder="Company Name" />
@@ -115,10 +126,9 @@
     </div>
     <button type="button" class="btn-add-delete">Add Experience</button>
 
-    <input type="submit" value="Submit" class="submit-btn" [disabled]="reactiveForm.invalid"> 
+      -->
     <!-- [disabled]="!reactiveForm.valid" -->
-  </form>
-</section>
+
 
 <!--uncomment below HTML for displaying form data-->
 
