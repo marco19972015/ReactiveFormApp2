@@ -22,61 +22,48 @@ export class AppComponent implements OnInit{
       username: new FormControl(null),
       dob: new FormControl(null),
       gender: new FormControl('female'),
-      street: new FormControl(null),
-      country: new FormControl('United States'),
-      city: new FormControl(null),
-      region: new FormControl(null),
-      postal: new FormControl(null),
+      address: new FormGroup({
+        street: new FormControl(null, Validators.required),
+        country: new FormControl(null, Validators.required),
+        city: new FormControl(null),
+        region: new FormControl(null),
+        postal: new FormControl(null, Validators.required),
+      }),
     })
   }
 
   OnFormSubmitted(){
     console.log(this.reactiveForm);
-    
   }
 
   // SIDE NOTES - FORM VALIDATION IN REACTIVE FORM
-  // In version 3, we will focus on how to show a validation error message to the user, if the user has not entered a valid value in a 
-  // form control
+  // In version 4 - The focus of this leacture will be on how to group some of the form controls together in a reactive form
 
-  // First we want to add some small text that will appear in the template
-    // Ex. <small>*First Name is a required field.</small>
-    // This already contains some css, which makes the color red and font bold
-  
+  // We will use the example of createing a FormGroup from the address fields
+  // We can do this using three simple steps 
 
-  // PROBLEM - Currently this text is static, meaning that even if we enter a valid value the text will still be there
-  // SOLUTION - We access the firstname control from the contols property. firstname control will contain its own valid/invalid property
-  
-  // To acomplish this we use get method that goes with FormGroup.
-  // This method allows us to access a form control from a FormGroup
-  
-  // First - We create an ngIf directive that will show or not show the text depending on a boolean value
-  // Second - We use reactiveForm in the directive since that is where our FormGroup lives
-  // Third - We call the get method and pass a string value (being the name of the form control) in this case firstname
-          // This will return us the first name form control from this reactive form group
-  // Forth - we use the invalid property (If the invalid prop is true - then small element is rendered)
-  
-    // Ex. <small *ngIf="reactiveForm.get('firstname')?.invalid"> text <small> 
-  // Now when we enter a valid value we see the red test removed 
+  // Step 1 - in our class file we look at the FormGroup that is connected to our reactive form. 
+  //          We are looking at the street, country, city, region, and postal form controls
+  //        - After the gender property we create a new property called 'address' and it will be of type FormGroup.
+  //          To the constructor we pass an object and this is where we create the other form controls 
+  //        - We cut the form controls we want and paste inside the new FormGroup
+
+  // Step 2 - In the second step, the form controls which we define in the HTML in regards to the address related FormGroup/controls
+  //        - We wrap this form controls inside a container div
+  //        - The idea being that we want encapsulate what we want to group inside a single container
+
+  // Step 3 - On the container div, we need to use a directive called formGroupName
+  //        - To this formGroupName we assign the name we created for our new FormGroup (address)
+  //          - Ex. formGroupName="address"
+
+  // When we log out the form, we can usee inside controls property we have a new property called address of type FormGroup
 
 
-  // PROBLEM - When the page loads the red text will still be there
-  // SOLUTION - We can use touched property of form control 
+  // Now we want to make street, country, and postal a required field
+  // To do this we add Validators.required
+  // On the HTML side we use our ngIf directive and place our small text wherever we want to use it for validation
+  // In order to access the form control within the new FormGroup we need to do the following 
 
-  // First - We add an && operator to our directive 
-  // Second -  We again use get method and access the touched property of firstname
-
-    // Ex. reactiveForm.get('firstname')?.touched
-
-
-  // We can now repeat these steps wherever we want this validation to show up, we just need to replace the property we want to retrieve 
-
-
-  // NOW, we want to disable the submit button if any of the form controls are invalid, else we can submit
-  // We use the form level valid and invalid property to control this
-
-  // To achieve this we use the disabled attribute and use property binding
-  // We again use the reactiveForm since that's where our FormGroup lives
-    // Ex -  <input type="submit" value="Submit" class="submit-btn" [disabled]="reactiveForm.invalid"> 
-  
+  // Ex. <small *ngIf="reactiveForm.get('address.street')?.invalid && reactiveForm.get('address.street')?.touched">
+    // Doing this will allow us to access the FormGroup - FormGroup - Form Control
 }
