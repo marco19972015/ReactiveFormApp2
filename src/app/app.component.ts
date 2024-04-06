@@ -31,11 +31,16 @@ export class AppComponent implements OnInit{
       }),
       skills: new FormArray([
         new FormControl(null, Validators.required),
-        new FormControl(null, Validators.required),
-        new FormControl(null, Validators.required),
-        new FormControl(null, Validators.required),
       ])
     })
+  }
+
+  AddSkills(){
+    (<FormArray>this.reactiveForm.get('skills')).push(new FormControl(null, Validators.required));
+  }
+  DeleteSkill(index: number) {
+    const controls = (<FormArray>this.reactiveForm.get('skills'));
+    controls.removeAt(index)
   }
 
   OnFormSubmitted(){
@@ -43,70 +48,65 @@ export class AppComponent implements OnInit{
   }
 
   // SIDE NOTES - FORM VALIDATION IN REACTIVE FORM
-  // In version 5 - In this lecture we will learn what is a Form Array and how to create and use a form array in a reactive form 
+  // In version 6 - In this lecture we will learn how to add dynamic controls in a form using a reactive form approach
+  // This is one of the advantages we get when using reactive forms, we can add dynamic controls in our form 
 
-  // WHAT IS A FormArray?
-  // A FormArray is a way to manage a collection of form controls in Angular. The form control can be a FormGroup, FormControl or another FormArray
+  // Originally, we created 4 form controls through the use of FormArray and looped through those form controls using ngFor directive             
+  // and dynamically generating them 
 
-  // In Angular, we can group form controls in two ways.
-    // - Using FromGroup
-    // - Using FormArray
-  
-  // The difference between FormGroup and FormArray is in the way they create the collection.
-    // - FormGroup stores the form controls in the form of key value pair in an object
-    // - FormArray stores the form control as an element of an array
+  // Now we want to show one input element for the skill and have a button to add and another button to remove 
+  // When the add button is clicked it should create this add skill input element dynamically 
 
-  
-  // To start using a FormArray we place it inside out reativeForm FormGroup object 
-  // Step 1 - We create a property (skills) and assign an instance of FormArray
-  //        - When creaing a FormArray we pass an array instead of an object
+  // Step 1 - We add an add button element to the HTMl
+  //        - This button is automatically of type submit so we change it to type button
 
-  // Step 2 - We define the form controls inside the array (we can add as many as we want)
-  //        - Ex.       skills: new FormArray([new FormControl(null)])
+  // Step 2 - We bind a click event and assign a method (addSkills() in our case)
+  //        - We also create method back in the class 
+  //        - And when this method is called we want to insert a new form control inside this skills array
 
-  // Step 3 - Now we want to bind the new FormControl to our HTML
-  //        - In out HTML we create an div, inside we create an input element of type text
-  //        - Our new div is acting as a container for the input element 
-  //        - This is where we want to display all our form controls of the FormArray
+  // Step 3 - To access the reactiveForm we create an instance of the reactiveForm in the AddSkills method
+  //        - We then use the get method to access the skills control
+  //        - The get method returns us the FormArray connected to the skills property
 
-  // Step 4 - On the div container we use a directive called formArrayName 
-  //        - To this directive we need to assign the name of the FormArray
-  //        - Ex.       formArrayName="skills"
+  // IMPORTANT - Uisng the get method, it will return us a value of type AbstractControl.
+  //           - FormControl, FormGroup, and FormArray are child classes of the AbstractControl
+  //           - So get method can return the latter
+  //           - We will use the push method to increase the skills.
+  //           - NOTE, only FormArray has access to push, FormControl and FormGroup can't use the push method
 
-  // Step 5 (One way) -  We need to create the same amount of formControls inside of the div container we created as in the FormArray
-  // Step 5A - We can also optionally loop over the FormArray instead of hard coding the equal amount of FormControls 
-  //         - To do this we use te ngFor directive on the first form control
-  //         - to access the array itself we use get method on the reactiveForm and access the skills/controls array
-  //         - Ex.      *ngFor="let control of reactiveForm.get('skills')['controls']
-  //         - With this we can now add more controls in the class and it will update in our template
+  // Step 4 - In order to use push method we explicitly give the FormArray type to the instance of reactiveForm
+  //        - Ex.       <FormArray>this.reactiveForm.get('skills')
+  //        - We then wrap the expression within paranthesis 
+  //        - Ex. (<FormArray>this.reactiveForm.get('skills'))
+  //        - This expression will return us a FormArray giving us access to the push method
 
-  // PROBLEM
-  // - None of the input elements we created through the FormArray have a state 
-  //   Meaning none have a css class associated with the input ie. ng-dirty etc
-  //   This is because currently the form controls being generated are not connected to the form controls in our class 
+  // Step 5 - We use the push method to pass a FormControl with the value null and have it set as a required field
+  //        - Ex.     .push(new FormControl(null, Validators.required))
+  //        - Now when we click the Add Skills button it will render a form control dynamically 
 
-  // SOLUTION
-  // - In order to connect them we need to use the formControlName directive 
-  // - They also need to be assigned a name, however since they are being generated dynamically we 
-  //   specify the index of that element in the form array as the name right after the creation of the elements in the ngFor Directive
-  // - Ex.    ; let i = index
 
-  // Step 6 - We create a formControlName diretive on the first input element
-  //        - Ex.        formControlName="i">
-  //        - Initially as it is, 'i' will be treated as a string value
-  //        - Instead of specifying the form control as 'i' we want to assign the form control name with the value stored in the i variable
-  //        - So we do property binding on the formControlName 
-  //        - Ex.        [formControlName]="i">
-  //        - With this, we now have css classes added to dynamic inputs
-  //        - We also added ng-reflect-name for each input going from 0 to however many were created
+  // Now we want to create a way to remove this controls in a reactive way
 
-  // ADDING VALIDATION ON THESE FORM CONTROLS 
-  // we just add Validators.required to the form controls 
+  // Step 1 - We create a button element right after the input element
 
-  // In conclusion, a form array is a collection of form control/ form group/ or another form array 
-  // To create a form array we first define it inside the code/class 
-  // Then we create a container inside the HTML
-  // Inside the container we create the form elements 
-  // We bind those form elements to a formControl in the form array using formControlName
-  // We bind the container element to the formArray by using the formArrayName directive
+  // Step 2 - We wrap both the intput and the new button inside a new Div element 
+
+  // Step 3 - We move the ngFor directive to the div that now wraps both the input and button element 
+  //        - This is done because we want both the input and button to be dynamically generated 
+
+  // Step 4 - Now for the Delete button we create a click event and pass in a method (DeleteSkill() in our case)
+  //        - We also create that method in the class 
+
+  // Step 5 - We need to pass the index of the element that we want to delete
+  //        - In order to get the index we use the loop we created to loop through each element and the index that is stored in variable i 
+  //        - So we pass the variable 'i' to the DeleteSkill method as an argument
+  //        - Ex.     (click)="DeleteSkill(i)
+  //        - Ex.     DeleteSkill(index: number)
+
+  // Step 6 - Using the index we can now delete the skill form the skills form array
+  //        - In order to get access to the FormArray we can use the same expression we used before 
+  //        - Ex.     (<FormArray>this.reactiveForm.get('skills'))
+
+  // Step 7 - We then store it in a variable and use that variable to remove the element based on the index
+  //        - Ex.     controls.removeAt(index)
 }
