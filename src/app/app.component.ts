@@ -2,6 +2,7 @@ import { OnInit } from '@angular/core';
 import { Component } from '@angular/core';
 import { FormArray, FormControl, Validators } from '@angular/forms';
 import { FormGroup } from '@angular/forms';
+import { noSpaceAllowed } from './Validators/noSpaceAllowed.validator'
 
 @Component({
   selector: 'app-root',
@@ -16,8 +17,8 @@ export class AppComponent implements OnInit{
 
   ngOnInit(): void {
     this.reactiveForm = new FormGroup({
-      firstname: new FormControl(null, Validators.required),
-      lastname: new FormControl(null, Validators.required),
+      firstname: new FormControl(null, [Validators.required, noSpaceAllowed]),
+      lastname: new FormControl(null, [Validators.required, noSpaceAllowed]),
       email: new FormControl(null, [Validators.required, Validators.email]),
       username: new FormControl(null),
       dob: new FormControl(null),
@@ -41,6 +42,7 @@ export class AppComponent implements OnInit{
   AddSkills(){
     (<FormArray>this.reactiveForm.get('skills')).push(new FormControl(null, Validators.required));
   }
+
   DeleteSkill(index: number) {
     const controls = (<FormArray>this.reactiveForm.get('skills'));
     controls.removeAt(index)
@@ -68,82 +70,116 @@ export class AppComponent implements OnInit{
   }
 
   // SIDE NOTES - FORM VALIDATION IN REACTIVE FORM
-  // In version 7 - In this lecture we'll learn how to add and remove a form group dynamically from a reactive form 
+  // In version 8 - In this lecture we are going to learn how we can create a custom validator to validate the input data 
+  // in a form control 
 
-  // We know that a form group is a collection of form controls
-
-  // What we want to add is the ability to let the user add experience from his previous jobs
-
-  // Step 1 - We create a new FormArray called 'expereince' of type FormArray
-  //        - When we create a FormArray in the HTML we should have a container which we can bind to the FormArray
-
-  // Step 2 - We use formArrayName directive to bind the container to the FormArray
-  //        - Ex.    formArrayName="experience"
-
-  // Step 3 - Inside the FormArray we create an instance of FormGroup
-  //        - Inside the FormGroup we pass an object
-
-  // Step 4 - Now inside the contianer div we need to create another container div 
-  //        - This is the container div that will be binded to the new FormGroup that we created inside FormArray
-  //        - Inside this div we are going to need to bind this div to SOMETHING using formGroupName
-  //        - Ex.     <div formGroupName="">  
-
-  // Step 5 - The something will be the index of FormGroup inside the experience FormArray
-  //        - So for each instance of FormArray, we want to generate the div with the formGroupName dynamically and its content
-  //        - To start we use the ngFor directive and access the experience from our FormArray
-  //        - Ex.   *ngFor="let exp of reactiveForm.get('experience')['controls']"
-
-  // Step 6 - Now we use the semi colon so we can get the index of each element that is being created 
-  //        - ; let i = index"
-
-  // Step 7 - Then we can bind that 'i' variable to the formGroupName. Since it's a variable we use property binding on formGroupName directive
-  //        - [formGroupName]="i"
-
-  // Step 8 - Now inside the class we need to create some FormControls for the elements we want to bind ei. company name, position, start date...
-
-  // Step 9 - In our template we now need to bind the input elements to the properties in our class 
-  //        - for that we need to use formControlName directive and their designated properties
-  //        - Ex.     formControlName="company"
-
-  // Step 10 - We then create a button element and set its type to button
-  //         - We want to use this button to render the experience div 
-  //         - So we bind a click event and assign it a method (AddExperience() in our case)
-  //         - We also create the method in our class
-
-  // Step 11 - We create a variable called frmgroup 
-  //         - We cut the FormControls from our FormArray and assign it to the frmgroup variable
-
-  // Step 12 - Now we will push the FormGroup inside the experience FormArray
-  //         - We use the same method of getting the experience array as the skills array
-  //         - Ex.    (<FormArray>this.reactiveForm.get('exerience'))
-  //         - We then use the push method and pass in the frmgroup variable 
-  //         - Ex.    (<FormArray>this.reactiveForm.get('exerience')).push(frmgroup)
-  //         - With this the form groups are now added dynamically 
-
-  // All of these new divs include their own classes ie. ng-dirty 
+  // In the last version we worked with built in Validators such as 'required and email' (among others that are provided)
+  // NOW we will create a user define validator which we can use on a form control in order to validate the data which the user has inputed in form control
 
 
+  // In order to create a custom Validator, first we need to understand what is an error code and how it works 
 
-  // Now We want to let the user delete an experience div
+  // To start we'll remove the submit button logic that disables the button if the form is invalid (or not valid with the use of !)
 
-  // Step 1 - add a click event to the Delete Experience button
-  //        - And add the method to the class as well
+  // Step 1 - We remove the [disabled]="reactiveForm.invalid" from the button (This being what disables based on form invalid valid)
 
-  // Step 2 - We will want to delte based on an index
-  //        - For this we'll use the i variable since it already holds the index
+  // UNDERTAND 
+  //        - We will work with the firstname form control and we'll try to understand what an error code is
+  //        - When we submit the form, if we check the controls/firstname/... We can see that there is an errors property
+  //        - This is assigned with an object where the property name is required errors: {required: true}
+  //        - The required being an "error code"
+  //        - This shows up because we added a Validator.required to the form control and when it fails angular returns this object
+  //        - If we add a name to the firstname field, then errors will be null ex. errors: null.. this is becaue we satify the requirement 
 
-  // Step 3 - We pass 'i' as an argument in the template
-  //        - In the class we create index of type number as a parameter 
+  // NEXT 
+  //      - We can look into the email field (recall that we used two Validators for this form control)
+  //      - One is to make sure the user is imputing things in the field 
+  //      - Second is to make sure it is a valid email
+  //      - If we satisfy the characters input for Validator.required, BUT not the email for Validator.email we get errors: {email: true}
 
-  // Step 4 - We create access to get experience from the FormArray
-  //        - Ex.     (<FormArray>this.reactiveForm.get('experience'))
+  // POINT BEING MADE 
+  //      - If errors property is null, that means that specific form control has no validation error 
+  //      - BUT if errors property is not null that means a validation error has occurred 
+  //        - and we can see the error by looking into the validation error code
 
-  // Step 5 - We store the FormArray in a variable 
-  //        - Ex.     const frmArray = (<FormArray>this.reactiveForm.get('experience'))
+  // That is an error code in Angular 
 
-  // Step 6 - Now we can use removeAt method 
-  //        - We pass the index into this method
 
-  // With that we can now add and remove indexes
+  // Now lets see how the errors Validators are defined 
+  // We can do this by going to Angular docs section - search for "validators" - click on c Validators. There we can see all the validators
+  
+  // We can see that each Validator is a static method
+  // For example min() is a Validator, but it's also a method
+  // We can scroll down to the required() Validator, which is a method
+    // The signature of this method being 
+    // static required(control: AbstractControl<any, any>): ValidationErrors | null
+      // We can see that it's a static method, 
+      // and this required method is going to take an AbstractControl
+        // AbstractControl is a parent class for form control, form group and form array
+        // Meaning we can use it on a form control, form group, or form array
+      // And it will return either ValidationErrors code or null (if there is no validation error)
 
+
+  // With this information we can create a custom Validator
+  // WHAT CUSTOM VALIDATOR DO WE WANT TO CREATE 
+  // Currently in firstname and lastname we can enter a space, we want the user to enter firstnamd/lastname without a space
+  // SO we will create a Validator that check if in first/last name controls, if the user has used a space 
+
+  // Step 1 - Inside app folder we can create a new folder called Validators 
+
+  // Step 2 - Inside folder we create a new file called noSpaceAllowed.validator.ts
+
+  // Step 3 - Inisde this file we can create the validator function
+  //        - We create a variable called const noSpaceAllowed
+  //        - This will be the validator name
+
+  // Step 4 - We can then assign a function
+  //        ex. const noSpaceAllowed = () => {}
+
+  // step 5 - This function will recieve a form control parameter (since we don't plan on using it on form array or form group)
+  //          - We also need to import FromControl from angular/forms
+  //        ex. const noSpaceAllowed = (control: FormControl) => {} 
+
+  // Step 6 - Inside this function we'll write the logic 
+  //          - 1st write an if statement
+  //            - Inisde this if statement we check if this controls value property is null or not
+  //            ex. if(control.value != null)
+  //          - 2nd we check if it contains a space
+  //            ex if(... && control.value.indexOf(' '))
+  //              - We check the index and pass 'space'
+  //          So full logic as of now
+  //            if(control.value != null && control.value.indexOf(' '))
+  //         - So this method will return the index of the first occurance of this space in a value, 
+  //         - BUT if there is no space in that string value, in that case it will return -1
+  //          SO it check is not equal to -1, that means that value contains a space
+
+  //        if(control.value != null && control.value.indexOf(' ') != -1) {}
+
+  // Step 7 - If this is the case, we want to return an object
+  //        - In this object we want to return a return code
+  //        - We can call this {noSpaceAllowed: true}
+
+  //        if(control.value != null && control.value.indexOf(' ') != -1) {
+  //          return {noSpaceAllowed: true}
+  //        }
+
+  // Step 8 - Otherwise, if the value does not contain a space
+  //        - In that case, this index will return a -1, so if statement will fail
+  //        - outside the if statement we return null
+
+  // Whatever value we return in the return object or return, it will be assigned to the error property of form control
+
+  // WE CAN NOW TRY TO USE IT BY importing THE FILE
+
+  // Step 9 - In order to import it, we need to also export it from the function so we use the export statement 
+  //         ex. export const noSpaceAllowed...
+
+  // Step 10 - We can now added to the Validators as so...
+  //          firstname: new FormControl(null, [Validators.required, noSpaceAllowed]),
+
+  // Step 11 - If we place a name inside the input and add a space we get the error message "First Name is a required field"
+  //         - If we check the errors property we can see errors: {noSpaceAllowed: true}
+
+
+  // We have create the validator as a function, but we can create it as a method. 
 }
