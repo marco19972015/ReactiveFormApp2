@@ -20,7 +20,7 @@ export class AppComponent implements OnInit{
       firstname: new FormControl(null, [Validators.required, CustomValidators.noSpaceAllowed]),
       lastname: new FormControl(null, [Validators.required, CustomValidators.noSpaceAllowed]),
       email: new FormControl(null, [Validators.required, Validators.email]),
-      username: new FormControl(null),
+      username: new FormControl(null, Validators.required, CustomValidators.checkUsername),
       dob: new FormControl(null),
       gender: new FormControl('female'),
       address: new FormGroup({
@@ -70,176 +70,161 @@ export class AppComponent implements OnInit{
   }
 
   // SIDE NOTES - FORM VALIDATION IN REACTIVE FORM
-  // In version 8 - In this lecture we are going to learn how we can create a custom validator to validate the input data 
-  // in a form control 
+  // In version 9 - In this lecture we'll be learning what is an ASYNC VALIDATOR and how to create and use it. 
 
-  // In the last version we worked with built in Validators such as 'required and email' (among others that are provided)
-  // NOW we will create a user define validator which we can use on a form control in order to validate the data which the user has inputed in form control
+  // SIDE QUEST OPTIONAL CHANINIG OPERATOR (?.)
+  // The optinal chaining (?.) operator accesses an object's property or calls a function. If the object 
+  // accessed or function called using this operator is (undefined) or (null), the expression short circuits 
+  // and evaluates to (undefined) instead of throwing an error
 
+  // WHAT IS AN ASYNC VALIDATOR
+  // We use async valditor when we need to send an HTTP request to the server to check if the data entered in a form element is valid or not
 
-  // In order to create a custom Validator, first we need to understand what is an error code and how it works 
+  // The idea is that when we send an HTTP request to the server, the server might take some time in sending over the response.
+  // And once we have the response, we can then validate whether the data enetered in a form control is valid or not.
+  // This is the purpose of using an async validator
 
-  // To start we'll remove the submit button logic that disables the button if the form is invalid (or not valid with the use of !)
-
-  // Step 1 - We remove the [disabled]="reactiveForm.invalid" from the button (This being what disables based on form invalid valid)
-
-  // UNDERTAND 
-  //        - We will work with the firstname form control and we'll try to understand what an error code is
-  //        - When we submit the form, if we check the controls/firstname/... We can see that there is an errors property
-  //        - This is assigned with an object where the property name is required errors: {required: true}
-  //        - The required being an "error code"
-  //        - This shows up because we added a Validator.required to the form control and when it fails angular returns this object
-  //        - If we add a name to the firstname field, then errors will be null ex. errors: null.. this is becaue we satify the requirement 
-
-  // NEXT 
-  //      - We can look into the email field (recall that we used two Validators for this form control)
-  //      - One is to make sure the user is imputing things in the field 
-  //      - Second is to make sure it is a valid email
-  //      - If we satisfy the characters input for Validator.required, BUT not the email for Validator.email we get errors: {email: true}
-
-  // POINT BEING MADE 
-  //      - If errors property is null, that means that specific form control has no validation error 
-  //      - BUT if errors property is not null that means a validation error has occurred 
-  //        - and we can see the error by looking into the validation error code
-
-  // That is an error code in Angular 
+  // Creating an async validator is very similar to creating a sync validator (Differences below)
+  // The async validator must return either a PROMISE or an OBSERVABLE
+  // Angular does not provide any built-in async validator
+    // In Angular, all the built-in validators are sync validators 
+    // Ex. Validator.required(), Validator.email(), Validator.min(), Validator.max()
 
 
-  // Now lets see how the errors Validators are defined 
-  // We can do this by going to Angular docs section - search for "validators" - click on c Validators. There we can see all the validators
+  // IMPLEMENTATION
+  // In the form we have an input where we are able to create a username. 
+  // Using this input we can simulate checking to see if the username is already taken 
+  // If this is the case, then our application should not be able to use said username and instead show an error message
+  // Otherwise if the username DOES NOT exist, then we allow the user to enter the username
+
+  // First (SIMULATING OUR DATABASE)
+  // 1. We will need to create a function in our noSpaceAllowed.validator.ts class 
+    // We'll assume this function is an API to which we are making a call from our Angular application
   
-  // We can see that each Validator is a static method
-  // For example min() is a Validator, but it's also a method
-  // We can scroll down to the required() Validator, which is a method
-    // The signature of this method being 
-    // static required(control: AbstractControl<any, any>): ValidationErrors | null
-      // We can see that it's a static method, 
-      // and this required method is going to take an AbstractControl
-        // AbstractControl is a parent class for form control, form group and form array
-        // Meaning we can use it on a form control, form group, or form array
-      // And it will return either ValidationErrors code or null (if there is no validation error)
+  // 2. We create the function and name it 
+    //        function userNameAllowed(){}
 
-
-  // With this information we can create a custom Validator
-  // WHAT CUSTOM VALIDATOR DO WE WANT TO CREATE 
-  // Currently in firstname and lastname we can enter a space, we want the user to enter firstnamd/lastname without a space
-  // SO we will create a Validator that check if in first/last name controls, if the user has used a space 
-
-  // Step 1 - Inside app folder we can create a new folder called Validators 
-
-  // Step 2 - Inside folder we create a new file called noSpaceAllowed.validator.ts
-
-  // Step 3 - Inisde this file we can create the validator function
-  //        - We create a variable called const noSpaceAllowed
-  //        - This will be the validator name
-
-  // Step 4 - We can then assign a function
-  //        ex. const noSpaceAllowed = () => {}
-
-  // step 5 - This function will recieve a form control parameter (since we don't plan on using it on form array or form group)
-  //          - We also need to import FromControl from angular/forms
-  //        ex. const noSpaceAllowed = (control: FormControl) => {} 
-
-  // Step 6 - Inside this function we'll write the logic 
-  //          - 1st write an if statement
-  //            - Inisde this if statement we check if this controls value property is null or not
-  //            ex. if(control.value != null)
-  //          - 2nd we check if it contains a space
-  //            ex if(... && control.value.indexOf(' '))
-  //              - We check the index and pass 'space'
-  //          So full logic as of now
-  //            if(control.value != null && control.value.indexOf(' '))
-  //         - So this method will return the index of the first occurance of this space in a value, 
-  //         - BUT if there is no space in that string value, in that case it will return -1
-  //          SO it check is not equal to -1, that means that value contains a space
-
-  //        if(control.value != null && control.value.indexOf(' ') != -1) {}
-
-  // Step 7 - If this is the case, we want to return an object
-  //        - In this object we want to return a return code
-  //        - We can call this {noSpaceAllowed: true}
-
-  //        if(control.value != null && control.value.indexOf(' ') != -1) {
-  //          return {noSpaceAllowed: true}
-  //        }
-
-  // Step 8 - Otherwise, if the value does not contain a space
-  //        - In that case, this index will return a -1, so if statement will fail
-  //        - outside the if statement we return null
-
-  // Whatever value we return in the return object or return, it will be assigned to the error property of form control
-
-  // WE CAN NOW TRY TO USE IT BY importing THE FILE
-
-  // Step 9 - In order to import it, we need to also export it from the function so we use the export statement 
-  //         ex. export const noSpaceAllowed...
-
-  // Step 10 - We can now added to the Validators as so...
-  //          firstname: new FormControl(null, [Validators.required, noSpaceAllowed]),
-
-  // Step 11 - If we place a name inside the input and add a space we get the error message "First Name is a required field"
-  //         - If we check the errors property we can see errors: {noSpaceAllowed: true}
-
-
-
-  // We have create the validator as a function, but we can create it as a method. 
-
-  // Step 12 - To do this we create a class and call it CustomValidators which we also export
-  //         - we can then cut the function and place it inside the class 
-
-//   export class CustomValidators{
-//     noSpaceAllowed(control: FormControl){
-//         if(control.value != null && control.value.indexOf(' ') != -1){
-//             return {noSpaceAllowed: true}
-//         }
-//         return null;
-//     }
-//   }
-
-//          - With this we are not creating a method  
-
-  // Step 13 - We can now make this method static by using the static keyword 
-
-//   export class CustomValidators{
-//     static noSpaceAllowed(control: FormControl){
-//         if(control.value != null && control.value.indexOf(' ') != -1){
-//             return {noSpaceAllowed: true}
-//         }
-//         return null;
-//      }
-//    }
-
-  // We are not exporting the CustomValidators class
-
-  // Step 14 - We now import CustomValidators 
-  //          ex. import { CustomValidators } from './Validators/noSpaceAllowed.validator'
-
-  // Step 15 - We now use the CustomValidators class and use the method created
-  //         Ex. CustomValidators.noSpaceAllowed
-
-  // Step 16 - If we save the changes we can see that it still works and the errors is errors: {noSpaceAllowed: true}
+  // 3. This function will recieve a username and it will be of type string
+    //        function userNameAllowed(username: string){}
   
+  // 4. Inside this function we create a variable and we assign an array with names taken
+    //        const takenUserNames = ['marcotorres', 'webdev', 'procademy']
+  // The idea is that this variable will be reading from the database, but instead we use the array to mimick a DB 
+
+  // 5. Now we return a Promise, to do this we use a promise contructor
+  //          return new Promise()
+
+  // 6. To this constructor we need to pass a callback function
+  //          return new Promise(() => {})
+
+  // 7. And this call back function is going to recieve two arguments 
+  //          return new Promise((resolve, reject) => {}) 
+  // REMEMBER THAT A PROMISE ALWAYS NEEDS TO BE RESOLVED (so we need to return a promise)
+
+  // 8. Inside this function, we will use setTimeout
+  //          return new Promise((resolve, reject) => {setTimeout })
+  // This is done to simulate the passage of time
+
+  // 9. The setTimeout function also takes a callback function
+  //          setTimeout(() => {})
+
+  // 10. The setTimeout function also needs a time interval
+  //          setTimeout(() => {}, 5000)
+
+  // Currently from our client we are making a request to this API userNameAllowed
+  // And this API will return us a response after 5 seconds, so after 5 seconds the callback funtion will be executed
+  // from within this call back function we will return some data. 
+
+  //          function userNameAllowed(username: string){
+  //            const takenUserNames = ['marcotorres', 'webdev', 'procademy']
+
+  //            return new Promise((resolve, reject) => {
+  //              setTimeout(() => {
+            
+  //              }, 5000)
+  //            });
+  //          }
 
 
-  // Now we can use the value which gets assigned to the errors property in order to show a custom validation message based on error code
-  
+  // 1. Inside this callback function we place an if statement stating 
+  //  if the username being used in the method, if it already exists inside the takenUserName array
+  //           if(takenUserNames.includes(username))
+  //  if the username exists inside the takenUserNames array, the includes() method will return true, otherwise it will return false
 
-  // Step 1 - In the template we do the following 
-  //        - *ngIf="reactiveForm.get('firstname').errors['required']
-  //          - If the errors property contains required then we show the small text for required field
+  // 2. So if username does exist, we resolve the promise
+  //           resolve({})
 
-  // Step 2 - We then do the same for out new validator
-  //        <small *ngIf="reactiveForm.get('firstname').errors['noSpaceAllowed'] && reactiveForm.get('firstname')?.touched">
-  //          - In this case we want to show another error message
+  // 3. In the object within the resolve we will specify an error code
+  //            resolve({checkUsername: true})
 
-  // It works BUT, WE GET A - ERROR TypeError: Cannot read properties of null
-  // This is because the errors property will be assigned will the value null, 
-  // And at that null we either try to access required or noSpaceAllowed property
+  // 4. ELSE, if the username does not exist in the array 
+  //            resolve(null)
+  // We want to return a promise so we use resolve, this means there is no user within takeUserNames
 
-  // Step 3 - To avoid this error we can use OPTIONAL CHAINING
-  //        - we use a ? and then .
-  //        *ngIf="reactiveForm.get('firstname').errors?.['noSpaceAllowed'] 
-  //        *ngIf="reactiveForm.get('firstname').errors?.['required']
+  // The full Promise looks like so...
+//              return new Promise((resolve, reject) => {
+//                setTimeout(() => {
+//                  if(takenUserNames.includes(username)){
+//                      resolve({checkUsername: true})
+//                  } else {
+//                      resolve(null)
+//                  }
+//                }, 5000)
+//              });
 
-  //          - If this expression returns null, (and we using optional chaining), the further expressions are not evaluated 
+
+// Now we can move on to creating our custom validator within our CustomValidators class
+// Remember that a Validator is just a method 
+
+// 1. We create the method name
+//            static checkUsername(){}
+
+// 2. We specify a parameter for this method 
+//            static checkUsername(control: AbstractControl){}
+// Since we are retrieving for formgroup/formarry/formcontrol it needs to be of type AbstractControl
+// This reason we can use it for all three is because all three are childs of AbstractControl
+
+// 3. Within the method, we'll call it userNameAllowed function and pass in the value property of the formControl control property
+// This property contains the value property which stores primitive datatypes 
+//            userNameAllowed(control.value)
+// The idea being that when we use checkUsername in a form, said form will contain a value within that formControl
+// That value will then be assigned to the userNameAllowed parameter
+
+// 4. The userNameAllowed function will return us a Promise, so the async validator should also return a promise or an observable
+//  Since it's a Promise/Observabe, we expect a return. So....
+//            static checkUsername(control: AbstractControl): Promise<any>{
+//                return userNameAllowed(control.value)
+//            }
+
+// With this we have created an async validator, this validator must return a promise or an observable
+// So when we use checkUsername Validator, it will check call the userNameAllowed function
+// That function will return a Promise 
+// if the name exists, the promise will return as checkUsername: true
+// else if the name does not exist, it will return a promise with the value null
+
+
+// Now we can use it in our FormGroup username FormControl
+// 1. Currently we have it as null since we don't want any set value 
+//            username: new FormControl(null),
+
+// 2. Now the second argument should be a list of sync validators that we want to use on the formControl
+//            username: new FormControl(null, Validators.required),
+// In this case we add the Validators.required.
+// If we are using multiple sync validators we wrap it in an array, in this case we aren't
+
+// 3. We then add the third argument, the async validators
+//            username: new FormControl(null, Validators.required, CustomValidators.checkUsername),
+// Keep in mind the third argument should always be the async validators
+
+// If we check the template we can see that the input element will have have the usual  css classes ie. ng-pristine...
+// If we place a value inside this input we will see ng-pending
+// This will start our async validation (5 sec), depending on the outcome we will revieve either ng-valid or ng-invalid
+
+// If we want, we can use the ng-pending class to show a border while the data is being varified
+//            input.ng-pending{
+//              border: yellow 2px solid;
+//            }
+
+// ALWAYS REMEMBER THAT AN ASYNC VALIDATOR MUST RETURN A PROMISE OR OBSERVABLE
+// AND REST OF IMPLEMENTATION IS THE SAME AS A SYNC VALIDATOR
 }
