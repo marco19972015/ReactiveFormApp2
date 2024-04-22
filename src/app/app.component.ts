@@ -2,7 +2,7 @@ import { OnInit } from '@angular/core';
 import { Component } from '@angular/core';
 import { FormArray, FormControl, Validators } from '@angular/forms';
 import { FormGroup } from '@angular/forms';
-import { noSpaceAllowed } from './Validators/noSpaceAllowed.validator'
+import { CustomValidators } from './Validators/noSpaceAllowed.validator'
 
 @Component({
   selector: 'app-root',
@@ -17,8 +17,8 @@ export class AppComponent implements OnInit{
 
   ngOnInit(): void {
     this.reactiveForm = new FormGroup({
-      firstname: new FormControl(null, [Validators.required, noSpaceAllowed]),
-      lastname: new FormControl(null, [Validators.required, noSpaceAllowed]),
+      firstname: new FormControl(null, [Validators.required, CustomValidators.noSpaceAllowed]),
+      lastname: new FormControl(null, [Validators.required, CustomValidators.noSpaceAllowed]),
       email: new FormControl(null, [Validators.required, Validators.email]),
       username: new FormControl(null),
       dob: new FormControl(null),
@@ -181,5 +181,65 @@ export class AppComponent implements OnInit{
   //         - If we check the errors property we can see errors: {noSpaceAllowed: true}
 
 
+
   // We have create the validator as a function, but we can create it as a method. 
+
+  // Step 12 - To do this we create a class and call it CustomValidators which we also export
+  //         - we can then cut the function and place it inside the class 
+
+//   export class CustomValidators{
+//     noSpaceAllowed(control: FormControl){
+//         if(control.value != null && control.value.indexOf(' ') != -1){
+//             return {noSpaceAllowed: true}
+//         }
+//         return null;
+//     }
+//   }
+
+//          - With this we are not creating a method  
+
+  // Step 13 - We can now make this method static by using the static keyword 
+
+//   export class CustomValidators{
+//     static noSpaceAllowed(control: FormControl){
+//         if(control.value != null && control.value.indexOf(' ') != -1){
+//             return {noSpaceAllowed: true}
+//         }
+//         return null;
+//      }
+//    }
+
+  // We are not exporting the CustomValidators class
+
+  // Step 14 - We now import CustomValidators 
+  //          ex. import { CustomValidators } from './Validators/noSpaceAllowed.validator'
+
+  // Step 15 - We now use the CustomValidators class and use the method created
+  //         Ex. CustomValidators.noSpaceAllowed
+
+  // Step 16 - If we save the changes we can see that it still works and the errors is errors: {noSpaceAllowed: true}
+  
+
+
+  // Now we can use the value which gets assigned to the errors property in order to show a custom validation message based on error code
+  
+
+  // Step 1 - In the template we do the following 
+  //        - *ngIf="reactiveForm.get('firstname').errors['required']
+  //          - If the errors property contains required then we show the small text for required field
+
+  // Step 2 - We then do the same for out new validator
+  //        <small *ngIf="reactiveForm.get('firstname').errors['noSpaceAllowed'] && reactiveForm.get('firstname')?.touched">
+  //          - In this case we want to show another error message
+
+  // It works BUT, WE GET A - ERROR TypeError: Cannot read properties of null
+  // This is because the errors property will be assigned will the value null, 
+  // And at that null we either try to access required or noSpaceAllowed property
+
+  // Step 3 - To avoid this error we can use OPTIONAL CHAINING
+  //        - we use a ? and then .
+  //        *ngIf="reactiveForm.get('firstname').errors?.['noSpaceAllowed'] 
+  //        *ngIf="reactiveForm.get('firstname').errors?.['required']
+
+  //          - If this expression returns null, (and we using optional chaining), the further expressions are not evaluated 
 }
